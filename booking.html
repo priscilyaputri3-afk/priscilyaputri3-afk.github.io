@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Booking — KalaLaut</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <main class="booking-section" style="display:block;">
+    <div class="booking-card">
+
+      <h1>Booking Sekarang — KalaLaut</h1>
+      <p class="muted">Isi data di bawah untuk memesan. Pilih aktivitas atau tiket, tentukan tanggal dan jumlah peserta.</p>
+
+      <form id="bookingForm" class="booking-form" onsubmit="handleSubmit(event)">
+        <div class="row">
+          <label for="fullname">Nama Lengkap</label>
+          <input id="fullname" name="fullname" type="text" required placeholder="Nama lengkap" />
+        </div>
+
+        <div class="row">
+          <label for="email">Email</label>
+          <input id="email" name="email" type="email" required placeholder="email@domain.com" />
+        </div>
+
+        <div class="row">
+          <label for="phone">Nomor Telepon</label>
+          <input id="phone" name="phone" type="tel" required placeholder="+62 8xx xxxx xxxx" />
+        </div>
+
+        <div class="row">
+          <label for="item">Pilih Aktivitas / Tiket</label>
+          <select id="item" name="item" required onchange="updatePrice()">
+            <option value="" data-price="0">-- Pilih aktivitas / tiket --</option>
+            <option value="Surfing" data-price="150000">Surfing — Rp 150.000 / orang</option>
+            <option value="Snorkeling" data-price="120000">Snorkeling — Rp 120.000 / orang</option>
+            <option value="Diving" data-price="350000">Diving — Rp 350.000 / orang</option>
+            <option value="Tiket Pantai" data-price="15000">Tiket Masuk Pantai — Rp 15.000 / orang</option>
+            <option value="Resort Stay" data-price="750000">Resort Stay (per kamar) — Rp 750.000</option>
+          </select>
+        </div>
+
+        <div class="row small">
+          <div style="flex:1; margin-right:10px;">
+            <label for="date">Tanggal</label>
+            <input id="date" name="date" type="date" required />
+          </div>
+          <div style="width:130px;">
+            <label for="qty">Jumlah</label>
+            <input id="qty" name="qty" type="number" min="1" value="1" required onchange="updatePrice()" />
+          </div>
+        </div>
+
+        <div class="row">
+          <label for="notes">Permintaan / Catatan (opsional)</label>
+          <textarea id="notes" name="notes" rows="3" placeholder="Contoh: Saya ingin instruktur berbahasa Inggris."></textarea>
+        </div>
+
+        <div class="row price-row">
+          <div>
+            <p class="muted">Harga per unit</p>
+            <p id="unitPrice">—</p>
+          </div>
+          <div>
+            <p class="muted">Total</p>
+            <p id="totalPrice" class="total">Rp 0</p>
+          </div>
+        </div>
+
+        <div class="row actions">
+          <button type="submit" class="book-btn">Pesan Sekarang</button>
+          <button type="button" class="home-btn" onclick="location.href='index.html'">🏠 Kembali ke Beranda</button>
+        </div>
+      </form>
+
+      <!-- konfirmasi sederhana -->
+      <div id="confirmation" class="confirmation" style="display:none;">
+        <h3>Pesanan Diterima 🎉</h3>
+        <p id="confirmText"></p>
+        <button class="home-btn" onclick="location.href='index.html'">🏠 Kembali ke Beranda</button>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    function rupiah(n){
+      return 'Rp ' + Number(n).toLocaleString('id-ID');
+    }
+
+    function updatePrice(){
+      const sel = document.getElementById('item');
+      const opt = sel.options[sel.selectedIndex];
+      const price = Number(opt.dataset.price || 0);
+      const qty = Number(document.getElementById('qty').value || 1);
+
+      document.getElementById('unitPrice').textContent = price ? rupiah(price) : '—';
+      document.getElementById('totalPrice').textContent = price ? rupiah(price * qty) : 'Rp 0';
+    }
+
+    function handleSubmit(e){
+      e.preventDefault();
+      const form = e.target;
+      const fullname = form.fullname.value.trim();
+      const email = form.email.value.trim();
+      const phone = form.phone.value.trim();
+      const itemSel = form.item;
+      const item = itemSel.options[itemSel.selectedIndex].value;
+      const unit = Number(itemSel.options[itemSel.selectedIndex].dataset.price || 0);
+      const qty = Number(form.qty.value || 1);
+      const date = form.date.value;
+      const notes = form.notes.value;
+
+      if(!item || unit === 0){
+        alert('Pilih aktivitas / tiket terlebih dahulu.');
+        return;
+      }
+      if(!date){
+        alert('Pilih tanggal booking.');
+        return;
+      }
+
+      const total = unit * qty;
+      // tampilkan konfirmasi (dummy) — di produksi nanti submit ke server
+      document.getElementById('bookingForm').style.display = 'none';
+      const conf = document.getElementById('confirmation');
+      conf.style.display = 'block';
+      document.getElementById('confirmText').textContent =
+        `${fullname} — ${item} pada ${date} (x${qty})\nTotal: ${rupiah(total)}\nKami akan menghubungi: ${phone} / ${email}\nCatatan: ${notes || '-'}`;
+
+      // di sini bisa ditambahkan fetch() ke backend untuk menyimpan booking
+    }
+
+    // init
+    updatePrice();
+  </script>
+</body>
+</html>

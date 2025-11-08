@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kalalaut - Aktivitas dan Tiket Laut</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+   <!-- NAVIGATION BAR -->
+<nav class="navbar">
+  <div class="nav-container">
+    <img src="logo kalalaut.png" alt="KalaLaut Logo" class="nav-logo">
+    <ul class="nav-links">
+      <li><a href="#">Home</a></li>
+      <li><a href="about.html">About Me</a></li>
+    </ul>
+  </div>
+</nav>
+<!-- TULISAN ATAS -->
+    <h1>KalaLaut 🌊</h1>
+    <h2>Temukan & Pesan Semua Kebutuhan Ekowisata Pesisir Anda</h2>
+  </header>
+  <!-- SEARCH -->
+<main>
+    <div class="search-container">
+      <form method="POST">
+        <input type="text" name="search_query" placeholder="Cari nama pantai atau daerah..." required>
+        <button type="submit">Cari</button>
+      </form>
+    <!-- 🌐 Tombol Pencarian Berdasarkan Kriteria -->
+    <div class="filter-buttons">
+  <button onclick="filterByShortcut('Penginapan & Resort')">🌴 Penginapan & Resort</button>
+  <button onclick="filterByShortcut('Aktivitas Bahari')">🤿 Aktivitas Bahari</button>
+  <button onclick="filterByShortcut('Daerah Tujuan')">📍 Daerah Tujuan</button>
+  <button onclick="filterByShortcut('Jasa Profesional')">📷 Jasa Profesional</button>
+</div>
+    </div>
+
+    <!-- HASIL PENCARIAN -->
+<section id="results" class="results-section" style="display:none;">
+  <h2>Hasil Pencarian</h2>
+  <div class="card-grid" id="searchResults"></div>
+</section>
+
+<!-- HALAMAN DETAIL -->
+<section id="detailPage" class="details-section" style="display:none;">
+  <button onclick="backToSearch()" class="back-btn">← Kembali</button>
+  <h2 id="detailTitle"></h2>
+  <div id="detailGrid" class="card-grid"></div>
+</section>
+
+ <!-- CONTOH DATA -->
+<script>
+const data = [
+  {
+    daerah: "Bali",
+    pantai: "Pantai Kuta",
+    image: "Kuta Beach Bali.jpeg",
+    aktivitas: [
+      { name: "Surfing", image: "surf.jpeg" },
+      { name: "Sunset Viewing", image: "Kuta Beach.jpeg" }
+    ],
+    jasa: [
+  { name: "Instruktur Surfing", image: "Sunkissed Surfer Girl.jpeg", price: 250000 },
+  { name: "Penyewaan Papan Selancar", image: "download.jpeg", price: 100000 },
+  { name: "Jasa Fotografi Pantai", image: "fotografer.jpeg", price: 300000 } 
+  ],
+
+    resort: [
+      { name: "The Stones Resort", image: "stone resort.jpeg" },
+      { name: "Hard Rock Hotel", image: "hard rock.jpeg" }
+    ],
+    tiket: [
+      { name: "Tiket Pantai Kuta", image: "tiket kuta.jpeg" }
+    ]
+  },
+  {
+    daerah: "Bali",
+    pantai: "Pantai Sanur",
+    image: "sanur.jpeg",
+    aktivitas: [
+      { name: "Snorkeling", image: "snorkling.jpeg" },
+      { name: "Jogging Pagi", image: "jogging.jpeg" }
+    ],
+    jasa: [
+      { name: "Pemandu Wisata Lokal", image: "tour guide.jpeg" },
+      { name: "Jasa Fotografi Pantai", image: "foto sanur.jpeg" } 
+    ],
+    resort: [
+      { name: "Maya Sanur Resort", image: "Maya Sanur.jpeg" }
+    ],
+    tiket: [
+      { name: "Tiket Pantai Sanur", image: "tiket sanur.jpeg" }
+    ]
+  }
+];
+
+const form = document.querySelector("form");
+const searchResults = document.getElementById("searchResults");
+const detailPage = document.getElementById("detailPage");
+const bookingPage = document.getElementById("bookingPage");
+
+// 🔍 Fungsi pencarian manual
+form.addEventListener("submit", e => {
+  e.preventDefault();
+  const query = e.target.search_query.value.toLowerCase().trim();
+  search(query);
+});
+
+function search(query) {
+  const results = data.filter(item => 
+    item.daerah.toLowerCase().includes(query) ||
+    item.pantai.toLowerCase().includes(query) ||
+    item.resort.some(r => r.name.toLowerCase().includes(query))
+  );
+
+  if (results.length === 0) {
+    alert("Tidak ditemukan!");
+    return;
+  }
+
+  document.getElementById("results").style.display = "block";
+  searchResults.innerHTML = "";
+
+  results.forEach(item => {
+    const card = document.createElement("div");
+    card.className = "card";
+    card.innerHTML = `
+  <img src="${item.image}" alt="${item.pantai}">
+  <div class="card-info">
+    <h4>${item.pantai}</h4>
+    <p class="location">📍 ${item.lokasi || item.daerah}</p>
+    <p class="desc">${item.deskripsi || "Destinasi populer di kawasan pesisir."}</p>
+  </div>
+`;
+    card.onclick = () => showDetail(item);
+    searchResults.appendChild(card);
+  });
+}
+
+// 📌 Fungsi utama tombol shortcut
+function filterByShortcut(category) {
+  const results = document.getElementById("results");
+  results.style.display = "block";
+  detailPage.style.display = "none";
+  searchResults.innerHTML = "";
+
+  // Shortcut "Daerah Tujuan" → tampilkan daftar pantai
+  if (category === "Daerah Tujuan") {
+    const daerahList = data.map(item => ({
+      name: item.pantai,
+      image: item.image,
+      item: item
+    }));
+
+    daerahList.forEach(el => {
+      const card = document.createElement("div");
+      card.className = "card";
+      card.innerHTML = `
+        <img src="${el.image}" alt="${el.name}">
+        <h4>${el.name}</h4>
+      `;
+      card.onclick = () => showDetail(el.item);
+      searchResults.appendChild(card);
+    });
+    return;
+  }
+
+  // Shortcut selain daerah langsung ke daftar kategori → klik langsung booking
+  let allItems = [];
+
+  data.forEach(p => {
+    if (category === "Penginapan & Resort" && p.resort)
+      allItems.push(...p.resort.map(r => ({ ...r, pantai: p.pantai })));
+    if (category === "Aktivitas Bahari" && p.aktivitas)
+      allItems.push(...p.aktivitas.map(a => ({ ...a, pantai: p.pantai })));
+    if (category === "Jasa Profesional" && p.jasa)
+      allItems.push(...p.jasa.map(j => ({ ...j, pantai: p.pantai })));
+  });
+
+  allItems.forEach(el => {
+    const card = document.createElement("div");
+    card.className = "card";
+    card.innerHTML = `
+  <img src="${el.image}" alt="${el.name}">
+  <div class="card-info">
+    <h4>${el.name}</h4>
+    <p class="location">📍 ${el.lokasi || el.pantai}</p>
+    <p class="desc">${el.deskripsi || "Klik untuk lihat detail atau booking."}</p>
+  </div>
+`;
+
+    card.onclick = () => showBooking(el);
+    searchResults.appendChild(card);
+  });
+}
+
+// 📄 DETAIL & BOOKING
+function showDetail(item) {
+  document.getElementById("results").style.display = "none";
+  detailPage.style.display = "block";
+
+  document.getElementById("detailTitle").textContent = item.pantai;
+  const detailGrid = document.getElementById("detailGrid");
+  detailGrid.innerHTML = "";
+
+  const allItems = [
+    ...(item.aktivitas ? item.aktivitas.map(a => ({ ...a, category: "Aktivitas Bahari" })) : []),
+    ...(item.jasa ? item.jasa.map(j => ({ ...j, category: "Jasa Profesional" })) : []),
+    ...(item.resort ? item.resort.map(r => ({ ...r, category: "Penginapan & Resort" })) : []),
+    ...(item.tiket ? item.tiket.map(t => ({ ...t, category: "Tiket Masuk Pantai" })) : [])
+  ];
+
+  allItems.forEach(el => {
+    const card = document.createElement("div");
+    card.className = "card";
+    card.innerHTML = `
+      <img src="${el.image}" alt="${el.name}">
+      <h4>${el.name}</h4>
+      <p class="category-label">${el.category}</p>
+    `;
+    card.onclick = () => showBooking(el);
+    detailGrid.appendChild(card);
+  });
+}
+
+// 📦 Fungsi pindah ke halaman booking.html
+function showBooking(item) {
+  localStorage.setItem("bookingItem", JSON.stringify(item));
+  window.location.href = "booking.html";
+}
+
+// Tombol kembali
+function backToSearch() {
+  document.getElementById("results").style.display = "block";
+  detailPage.style.display = "none";
+}
+</script>
+
+
+<!-- NOTE -->
+    <p class="note">
+      Ini adalah MVP. Database dan integrasi pembayaran akan ditambahkan pada fase pengembangan selanjutnya. Jika ingin mencoba pencarian maka data yang tersedia adalah bali, pantai sanur, dan pantai kuta.
+    </p>
+  </main>
+</body>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-container">
+    <div class="footer-section about">
+      <h2><img src="logo kalalaut.png" alt="KalaLaut" class="footer-logo"> KalaLaut</h2>
+      <p>Platform terpadu untuk semua kebutuhan ekowisata pesisir Anda di Indonesia.</p>
+    </div>
+
+    <div class="footer-section">
+      <h3>Tentang KalaLaut</h3>
+      <ul>
+        <li><a href="about.html">Tentang Kami</a></li>
+        <li><a href="about.html">Kontak</a></li>
+      </ul>
+    </div>
+
+    <div class="footer-section newsletter">
+      <h3>Newsletter</h3>
+      <p>Dapatkan update destinasi dan promo terbaru</p>
+      <form>
+        <input type="email" placeholder="Email Anda">
+        <button type="submit">Berlangganan</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="footer-bottom">
+    <p>© 2025 KalaLaut. Semua hak dilindungi.</p>
+    <div class="socials">
+      <a href="#"><img src="Facebook logo.jpeg" alt="Facebook"></a>
+      <a href="https://www.instagram.com/prisscyyy_/"><img src="Instagram png icon vector.jpeg" alt="Instagram"></a>
+      <a href="#"><img src="twitter.jpeg" alt="Twitter"></a>
+      <a href="#"><img src="Gmail 195.jpeg" alt="Email"></a>
+    </div>
+  </div>
+</footer>
+
+</html>
